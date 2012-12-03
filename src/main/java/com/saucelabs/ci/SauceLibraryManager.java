@@ -3,14 +3,10 @@ package com.saucelabs.ci;
 import com.saucelabs.sauceconnect.SauceConnect;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.json.JSONException;
-import org.json.JSONObject;
+import org.json.simple.JSONObject;
+import org.json.simple.JSONValue;
 
-import java.io.BufferedOutputStream;
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.URISyntaxException;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -34,10 +30,9 @@ public abstract class SauceLibraryManager {
      *
      * @return boolean indicating whether an updated sauce connect jar is available
      * @throws java.io.IOException
-     * @throws org.json.JSONException      thrown if an error occurs during the parsing of the JSON response
      * @throws java.net.URISyntaxException
      */
-    public boolean checkForLaterVersion() throws IOException, JSONException, URISyntaxException {
+    public boolean checkForLaterVersion() throws IOException, URISyntaxException {
         
         logger.info("Checking for updates to Sauce Connect");
         String response = getSauceAPIFactory().doREST(VERSION_CHECK_URL);
@@ -52,11 +47,10 @@ public abstract class SauceLibraryManager {
      * to be used to retrieve the latest version of Sauce Connect, then updates the Bamboo Sauce plugin jar
      * to include this jar.
      *
-     * @throws org.json.JSONException      thrown if an error occurs during the parsing of the JSON response
      * @throws java.io.IOException
      * @throws java.net.URISyntaxException
      */
-    public void triggerReload() throws JSONException, IOException, URISyntaxException {
+    public void triggerReload() throws IOException, URISyntaxException {
         logger.info("Updating Sauce Connect");
         String response = getSauceAPIFactory().doREST(VERSION_CHECK_URL);
 //        String response = IOUtils.toString(getClass().getResourceAsStream("/versions.json"));
@@ -70,10 +64,10 @@ public abstract class SauceLibraryManager {
 
     public abstract void updatePluginJar(File jarFile) throws IOException, URISyntaxException;
 
-    public int extractVersionFromResponse(String response) throws JSONException {
-        JSONObject versionObject = new JSONObject(response);
-        JSONObject sauceConnect2 = versionObject.getJSONObject(SAUCE_CONNECT_KEY);
-        String versionText = sauceConnect2.getString(VERSION_KEY);
+    public int extractVersionFromResponse(String response) {
+        JSONObject versionObject = (JSONObject) JSONValue.parse(response);
+        JSONObject sauceConnect2 = (JSONObject) versionObject.get(SAUCE_CONNECT_KEY);
+        String versionText = (String) sauceConnect2.get(VERSION_KEY);
         //extract the last digits after the -
         String versionNumber = StringUtils.substringAfter(versionText, "-r");
         if (StringUtils.isBlank(versionNumber)) {
@@ -90,10 +84,9 @@ public abstract class SauceLibraryManager {
      *
      * @param response
      * @return
-     * @throws org.json.JSONException
      * @throws java.io.IOException
      */
-    public File retrieveNewVersion(String response) throws JSONException, IOException {
+    public File retrieveNewVersion(String response) throws IOException {
         //perform HTTP get for download_url
         String downloadUrl = extractDownloadUrlFromResponse(response);
         byte[] bytes = getSauceAPIFactory().doHTTPGet(downloadUrl);
@@ -154,12 +147,11 @@ public abstract class SauceLibraryManager {
      *
      * @param response
      * @return String representing the URL to use to download the sauce connect jar
-     * @throws org.json.JSONException thrown if an error occurs during the parsing of the JSON response
      */
-    private String extractDownloadUrlFromResponse(String response) throws JSONException {
-        JSONObject versionObject = new JSONObject(response);
-        JSONObject sauceConnect2 = versionObject.getJSONObject(SAUCE_CONNECT_KEY);
-        return sauceConnect2.getString(DOWNLOAD_URL_KEY);
+    private String extractDownloadUrlFromResponse(String response) {
+        JSONObject versionObject = (JSONObject) JSONValue.parse(response);
+        JSONObject sauceConnect2 = (JSONObject) versionObject.get(SAUCE_CONNECT_KEY);
+        return (String) sauceConnect2.get(DOWNLOAD_URL_KEY);
     }
 
 

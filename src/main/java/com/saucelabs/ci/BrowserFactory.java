@@ -6,18 +6,13 @@
 package com.saucelabs.ci;
 
 import org.apache.log4j.Logger;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.JSONValue;
 
 import java.io.IOException;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Handles invoking the Sauce REST API to retrieve the list of valid Browsers.  The list of browser is cached for
@@ -45,12 +40,10 @@ public class BrowserFactory {
         } catch (IOException e) {
             //TODO exception could mean we're behind firewall
             logger.error("Error retrieving browsers, attempting to continue", e);
-        } catch (JSONException e) {
-            logger.error("Error retrieving browsers, attempting to continue", e);
         }
     }
 
-    public List<Browser> getSeleniumBrowsers() throws IOException, JSONException {
+    public List<Browser> getSeleniumBrowsers() throws IOException {
         List<Browser> browsers;
         if (shouldRetrieveBrowsers()) {
             browsers = initializeSeleniumBrowsers();
@@ -62,7 +55,7 @@ public class BrowserFactory {
         return browsers;
     }
 
-    public List<Browser> getWebDriverBrowsers() throws IOException, JSONException {
+    public List<Browser> getWebDriverBrowsers() throws IOException {
         List<Browser> browsers;
         if (shouldRetrieveBrowsers()) {
             browsers = initializeWebDriverBrowsers();
@@ -78,7 +71,7 @@ public class BrowserFactory {
         return lastLookup == null;
     }
 
-    private List<Browser> initializeSeleniumBrowsers() throws IOException, JSONException {
+    private List<Browser> initializeSeleniumBrowsers() throws IOException {
         List<Browser> browsers = getSeleniumBrowsersFromSauceLabs();
         seleniumLookup = new HashMap<String, Browser>();
         for (Browser browser : browsers) {
@@ -88,7 +81,7 @@ public class BrowserFactory {
         return browsers;
     }
 
-    private List<Browser> initializeWebDriverBrowsers() throws IOException, JSONException {
+    private List<Browser> initializeWebDriverBrowsers() throws IOException {
         List<Browser> browsers = getWebDriverBrowsersFromSauceLabs();
         webDriverLookup = new HashMap<String, Browser>();
         for (Browser browser : browsers) {
@@ -98,7 +91,7 @@ public class BrowserFactory {
         return browsers;
     }
 
-    private List<Browser> getSeleniumBrowsersFromSauceLabs() throws IOException, JSONException {
+    private List<Browser> getSeleniumBrowsersFromSauceLabs() throws IOException {
         String response = getSauceAPIFactory().doREST(BROWSER_URL + "/selenium-rc");
         List<Browser> browsers = getBrowserListFromJson(response);
         List<Browser> toRemove = new ArrayList<Browser>();
@@ -113,7 +106,7 @@ public class BrowserFactory {
         return browsers;
     }
 
-    private List<Browser> getWebDriverBrowsersFromSauceLabs() throws IOException, JSONException {
+    private List<Browser> getWebDriverBrowsersFromSauceLabs() throws IOException {
         String response = getSauceAPIFactory().doREST(BROWSER_URL + "/webdriver");
         return getBrowserListFromJson(response);
     }
@@ -127,23 +120,22 @@ public class BrowserFactory {
      *
      * @param browserListJson
      * @return
-     * @throws JSONException
      */
-    public List<Browser> getBrowserListFromJson(String browserListJson) throws JSONException {
+    public List<Browser> getBrowserListFromJson(String browserListJson) {
         List<Browser> browsers = new ArrayList<Browser>();
 
-        JSONArray browserArray = new JSONArray(browserListJson);
-        for (int i = 0; i < browserArray.length(); i++) {
-            JSONObject browserObject = browserArray.getJSONObject(i);
-            String seleniumName = browserObject.getString("api_name");
+        JSONArray browserArray = (JSONArray) JSONValue.parse(browserListJson);
+        for (int i = 0; i < browserArray.size(); i++) {
+            JSONObject browserObject = (JSONObject) browserArray.get(i);
+            String seleniumName = (String) browserObject.get("api_name");
             if (seleniumName.equals(IEHTA)) {
                 //exclude these browsers from the list, as they replicate iexplore and firefox
                 continue;
             }
-            String longName = browserObject.getString("long_name");
-            String longVersion = browserObject.getString("long_version");
-            String osName = browserObject.getString("os");
-            String shortVersion = browserObject.getString("short_version");
+            String longName = (String) browserObject.get("long_name");
+            String longVersion = (String) browserObject.get("long_version");
+            String osName = (String) browserObject.get("os");
+            String shortVersion = (String) browserObject.get("short_version");
             String browserKey = osName + seleniumName + shortVersion;
             String label = osName + " " + longName + " " + longVersion;
             browsers.add(new Browser(browserKey, osName, seleniumName, shortVersion, label));

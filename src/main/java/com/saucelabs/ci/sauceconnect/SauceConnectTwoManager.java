@@ -1,5 +1,6 @@
 package com.saucelabs.ci.sauceconnect;
 
+
 import com.saucelabs.sauceconnect.SauceConnect;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.NullOutputStream;

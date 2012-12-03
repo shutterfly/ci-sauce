@@ -1,22 +1,20 @@
 package com.saucelabs.ci;
 
-import org.apache.commons.lang.StringEscapeUtils;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.JSONValue;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- *
  * @author <a href="http://www.sysbliss.com">Jonathan Doklovic</a>
  * @author Ross Rowe
  */
-public class SODSeleniumConfiguration
-{
+public class SODSeleniumConfiguration {
     private static final Logger logger = Logger.getLogger(SODSeleniumConfiguration.class);
 
     private String username;
@@ -29,50 +27,49 @@ public class SODSeleniumConfiguration
     private int maxDuration;
     private int idleTimeout;
 
-    public SODSeleniumConfiguration(String username, String accessKey, Browser browser)
-    {
+    public SODSeleniumConfiguration(String username, String accessKey, Browser browser) {
         this.username = username;
         this.accessKey = accessKey;
         this.browser = browser;
         this.userExtensions = new ArrayList<String>();
     }
 
-    public String toJson() throws JSONException
-    {
+    public String toJson() {
         //this is just a simple encoder.
         //no need for complex json utils at the moment
         JSONObject config = new JSONObject();
-        config.put("username",username);
-        config.put("access-key",accessKey);
+        config.put("username", username);
+        config.put("access-key", accessKey);
         if (browser != null) {
-            config.put("os",browser.getOs());
-            config.put("browser",browser.getBrowserName());
-            config.put("browser-version",browser.getVersion());
+            config.put("os", browser.getOs());
+            config.put("browser", browser.getBrowserName());
+            config.put("browser-version", browser.getVersion());
         }
-        config.put("record-video",recordVideo);
+        config.put("record-video", recordVideo);
 
-        if(StringUtils.isNotBlank(jobName)) {
-            config.put("job-name",jobName);
-        }
-
-        if(StringUtils.isNotBlank(firefoxProfileUrl)) {
-            config.put("firefox-profile-url",firefoxProfileUrl);
+        if (StringUtils.isNotBlank(jobName)) {
+            config.put("job-name", jobName);
         }
 
-        if(userExtensions.size() > 0) {
-            JSONArray extArray = new JSONArray(userExtensions);
-            config.put("user-extensions-url",extArray);
+        if (StringUtils.isNotBlank(firefoxProfileUrl)) {
+            config.put("firefox-profile-url", firefoxProfileUrl);
         }
 
-        if(maxDuration > 0) {
-            config.put("max-duration",maxDuration);
+        if (userExtensions.size() > 0) {
+            JSONArray extArray = new JSONArray();
+            extArray.addAll(userExtensions);
+            config.put("user-extensions-url", extArray);
         }
 
-        if(idleTimeout > 0) {
-            config.put("idle-timeout",idleTimeout);
+        if (maxDuration > 0) {
+            config.put("max-duration", maxDuration);
         }
 
-        return StringEscapeUtils.escapeJava(config.toString());
+        if (idleTimeout > 0) {
+            config.put("idle-timeout", idleTimeout);
+        }
+
+        return config.toString();
 
     }
 
@@ -80,126 +77,93 @@ public class SODSeleniumConfiguration
         userExtensions.add(ext);
     }
 
-    public String getAccessKey()
-    {
+    public String getAccessKey() {
         return accessKey;
     }
 
-    public void setAccessKey(String accessKey)
-    {
+    public void setAccessKey(String accessKey) {
         this.accessKey = accessKey;
     }
 
-    public Browser getBrowser()
-    {
+    public Browser getBrowser() {
         return browser;
     }
 
-    public void setBrowser(Browser browser)
-    {
+    public void setBrowser(Browser browser) {
         this.browser = browser;
     }
 
-    public String getFirefoxProfileUrl()
-    {
+    public String getFirefoxProfileUrl() {
         return firefoxProfileUrl;
     }
 
-    public void setFirefoxProfileUrl(String firefoxProfileUrl)
-    {
+    public void setFirefoxProfileUrl(String firefoxProfileUrl) {
         this.firefoxProfileUrl = firefoxProfileUrl;
     }
 
-    public int getIdleTimeout()
-    {
+    public int getIdleTimeout() {
         return idleTimeout;
     }
 
-    public void setIdleTimeout(int idleTimeout)
-    {
+    public void setIdleTimeout(int idleTimeout) {
         this.idleTimeout = idleTimeout;
     }
 
-    public String getJobName()
-    {
+    public String getJobName() {
         return jobName;
     }
 
-    public void setJobName(String jobName)
-    {
+    public void setJobName(String jobName) {
         this.jobName = jobName;
     }
 
-    public int getMaxDuration()
-    {
+    public int getMaxDuration() {
         return maxDuration;
     }
 
-    public void setMaxDuration(int maxDuration)
-    {
+    public void setMaxDuration(int maxDuration) {
         this.maxDuration = maxDuration;
     }
 
-    public boolean isRecordVideo()
-    {
+    public boolean isRecordVideo() {
         return recordVideo;
     }
 
-    public void setRecordVideo(boolean recordVideo)
-    {
+    public void setRecordVideo(boolean recordVideo) {
         this.recordVideo = recordVideo;
     }
 
-    public String getUsername()
-    {
+    public String getUsername() {
         return username;
     }
 
-    public void setUsername(String username)
-    {
+    public void setUsername(String username) {
         this.username = username;
     }
 
-    public List<String> getUserExtensions()
-    {
+    public List<String> getUserExtensions() {
         return userExtensions;
     }
 
-    public void setUserExtensions(List<String> userExtensions)
-    {
+    public void setUserExtensions(List<String> userExtensions) {
         this.userExtensions = userExtensions;
     }
 
-    public void setUserExtensions(JSONArray userExtensionsJson)
-    {
+//    public void setUserExtensions(JSONArray userExtensionsJson) {
+//
+//        for (int i = 0; i < userExtensionsJson.size(); i++) {
+//
+//            String ext = (String) userExtensionsJson.get(i);
+//            this.userExtensions.add(ext);
+//
+//        }
+//    }
 
-        for(int i=0;i<userExtensionsJson.length();i++) {
-            try
-            {
-                String ext = userExtensionsJson.getString(i);
-                this.userExtensions.add(ext);
-            } catch (JSONException e)
-            {
-                //just print and ignore
-                logger.error("Error parsing JSON string", e);
-            }
-        }
-    }
-
-    public void setUserExtensions(String jsonString)
-    {
-        if(StringUtils.isNotBlank(jsonString)) {
-            try
-            {
-                setUserExtensions(new JSONArray(jsonString));
-            } catch (JSONException e)
-            {
-                //just print and ignore
-                logger.error("Error parsing JSON string", e);
-            }
+    public void setUserExtensions(String jsonString) {
+        if (StringUtils.isNotBlank(jsonString)) {
+            setUserExtensions((JSONArray) JSONValue.parse(jsonString));
         }
 
     }
-
 
 }
