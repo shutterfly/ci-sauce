@@ -45,6 +45,7 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
 
     public void closeTunnelsForPlan(String userName, PrintStream printStream) {
         try {
+            logMessage(printStream, "Inside closeTunnelsForPlan");
             accessLock.lock();
             if (tunnelMap.containsKey(userName)) {
                 Integer count = decrementProcessCountForUser(userName, printStream);
@@ -77,6 +78,8 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
                 } else {
                     logMessage(printStream, "Jobs still running, not closing Sauce Connect");
                 }
+            } else {
+                logMessage(printStream, "Tunnel map does not contain " + userName);
             }
         } finally {
             accessLock.unlock();
