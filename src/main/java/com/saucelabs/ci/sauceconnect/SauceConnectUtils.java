@@ -71,6 +71,6 @@ public final class SauceConnectUtils {
                 }
             }
         }
-        return null;
+        return jarFile;
     }
 }

@@ -32,7 +32,13 @@ public class SauceFactory {
 
         URL url = new URL(urlText);
         String auth = userName + ":" + password;
-        BASE64Encoder encoder = new BASE64Encoder();
+        //Handle long strings encoded using BASE64Encoder - see http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6947917
+        BASE64Encoder encoder = new BASE64Encoder() {
+            @Override
+            protected int bytesPerLine() {
+                return 9999;
+            }
+        };
         auth = "Basic " + encoder.encode(auth.getBytes());
 
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
