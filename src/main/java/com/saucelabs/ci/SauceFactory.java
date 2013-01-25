@@ -21,7 +21,8 @@ public class SauceFactory {
     }
 
     /**
-     * Invokes a Sauce REST API command 
+     * Invokes a Sauce REST API command
+     *
      * @param urlText
      * @param userName
      * @param password
@@ -31,23 +32,26 @@ public class SauceFactory {
     public synchronized String doREST(String urlText, final String userName, final String password) throws IOException {
 
         URL url = new URL(urlText);
-        String auth = userName + ":" + password;
-        //Handle long strings encoded using BASE64Encoder - see http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6947917
-        BASE64Encoder encoder = new BASE64Encoder() {
-            @Override
-            protected int bytesPerLine() {
-                return 9999;
-            }
-        };
-        auth = "Basic " + encoder.encode(auth.getBytes());
-
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setDoOutput(true);
         conn.setInstanceFollowRedirects(false);
         conn.setRequestMethod("GET");
         conn.setRequestProperty("Content-Type", "application/json");
-        conn.setRequestProperty("Authorization", auth);
-
+        conn.setConnectTimeout(9 * 1000);
+        conn.setReadTimeout(9 * 1000);
+        if (userName != null && password != null) {
+            String auth = userName + ":" + password;
+            //Handle long strings encoded using BASE64Encoder - see http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6947917
+            BASE64Encoder encoder = new BASE64Encoder() {
+                @Override
+                protected int bytesPerLine() {
+                    return 9999;
+                }
+            };
+            auth = "Basic " + encoder.encode(auth.getBytes());
+            conn.setRequestProperty("Authorization", auth);
+        }
+        logger.info("About to perform HTTP GET from " + urlText);
         // Get the response
         BufferedReader rd = null;
         try {
@@ -58,7 +62,6 @@ public class SauceFactory {
             while ((line = rd.readLine()) != null) {
                 sb.append(line);
             }
-            rd.close();
 
             return sb.toString();
         } finally {
@@ -74,7 +77,7 @@ public class SauceFactory {
 
     /**
      * Populates the http proxy system properties.
-     * 
+     *
      * @param proxyHost
      * @param proxyPort
      * @param userName
@@ -98,13 +101,12 @@ public class SauceFactory {
     }
 
     /**
-     * 
      * @param downloadUrl
      * @return
      * @throws IOException
      */
     public byte[] doHTTPGet(String downloadUrl) throws IOException {
-         URL u;
+        URL u;
         InputStream is = null;
         OutputStream stream = null;
 
@@ -118,19 +120,15 @@ public class SauceFactory {
             is = con.getInputStream(); // throws an IOException
             return IOUtils.toByteArray(is);
 
-        }
-        catch (MalformedURLException mue) {
+        } catch (MalformedURLException mue) {
             logger.warn("Error in doHTTPGet", mue);
-        }
-        catch (IOException ioe) {
+        } catch (IOException ioe) {
             logger.warn("Error in doHTTPGet", ioe);
-        }
-        finally {
+        } finally {
             try {
                 if (is != null)
                     is.close();
-            }
-            catch (IOException ioe) {
+            } catch (IOException ioe) {
                 logger.warn("Error in doHTTPGet", ioe);
             }
         }

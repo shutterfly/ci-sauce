@@ -72,6 +72,7 @@ public class BrowserFactory {
     }
 
     private List<Browser> initializeSeleniumBrowsers() throws IOException {
+        logger.debug("Initalizing Sauce SeleniumRC Browser list");
         List<Browser> browsers = getSeleniumBrowsersFromSauceLabs();
         seleniumLookup = new HashMap<String, Browser>();
         for (Browser browser : browsers) {
@@ -82,6 +83,7 @@ public class BrowserFactory {
     }
 
     private List<Browser> initializeWebDriverBrowsers() throws IOException {
+        logger.debug("Initalizing Sauce WebDriver Browser list");
         List<Browser> browsers = getWebDriverBrowsersFromSauceLabs();
         webDriverLookup = new HashMap<String, Browser>();
         for (Browser browser : browsers) {
