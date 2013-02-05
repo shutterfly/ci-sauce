@@ -5,6 +5,7 @@
 
 package com.saucelabs.ci;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -94,7 +95,14 @@ public class BrowserFactory {
     }
 
     private List<Browser> getSeleniumBrowsersFromSauceLabs() throws IOException {
-        String response = getSauceAPIFactory().doREST(BROWSER_URL + "/selenium-rc");
+        String response = "";
+        try {
+            response = getSauceAPIFactory().doREST(BROWSER_URL + "/selenium-rc");
+        } catch (IOException e) {
+            //read json from static file
+            logger.error("Unable to retrieve selenium-rc browser list from REST, using static list", e);
+            response = IOUtils.toString(getClass().getResourceAsStream("/seleniumrc.json"));
+        }
         List<Browser> browsers = getBrowserListFromJson(response);
         List<Browser> toRemove = new ArrayList<Browser>();
         for (Browser browser : browsers) {
@@ -109,7 +117,14 @@ public class BrowserFactory {
     }
 
     private List<Browser> getWebDriverBrowsersFromSauceLabs() throws IOException {
-        String response = getSauceAPIFactory().doREST(BROWSER_URL + "/webdriver");
+        String response = null;
+        try {
+            response = getSauceAPIFactory().doREST(BROWSER_URL + "/webdriver");
+        } catch (IOException e) {
+            //read json from static file
+            logger.error("Unable to retrieve webdriver browser list from REST, using static list", e);
+            response = IOUtils.toString(getClass().getResourceAsStream("/webdriver.json"));
+        }
         return getBrowserListFromJson(response);
     }
 
