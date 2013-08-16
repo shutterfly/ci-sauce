@@ -4,7 +4,7 @@
 
     <groupId>com.saucelabs</groupId>
     <artifactId>ci-sauce</artifactId>
-    <version>1.24_bamboo_patch</version>
+    <version>1.25_bamboo_patch</version>
     <packaging>jar</packaging>
 
     <name>ci-sauce</name>

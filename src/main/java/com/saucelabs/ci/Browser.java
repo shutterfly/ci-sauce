@@ -50,6 +50,11 @@ public class Browser implements Comparable<Browser> {
             //use the 'VISTA' Platform
             return Platform.extractFromSysProperty("windows vista");
         }
+
+        if (os.equalsIgnoreCase("windows 2012")) {
+            //use the 'WIN8' Platform
+            return Platform.extractFromSysProperty("win8");
+        }
         //otherwise just return the os
         return Platform.extractFromSysProperty(os);
     }
@@ -99,6 +104,6 @@ public class Browser implements Comparable<Browser> {
     }
 
     public String getUri() {
-	    return "sauce-ondemand:?os=" + os + "&browser=" + browserName + "&browser-version=" + version;
-	}
+        return "sauce-ondemand:?os=" + os + "&browser=" + browserName + "&browser-version=" + version;
+    }
 }
