@@ -1,11 +1,8 @@
 package com.saucelabs.ci.sauceconnect;
 
-
-import com.saucelabs.sauceconnect.SauceConnect;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.NullOutputStream;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 
 import java.io.*;
 import java.net.URISyntaxException;
@@ -28,9 +25,9 @@ import java.util.logging.Level;
  */
 public class SauceConnectTwoManager implements SauceTunnelManager {
 
-    private static final Logger logger = Logger.getLogger(SauceConnectTwoManager.class);
-
     private static final java.util.logging.Logger julLogger = java.util.logging.Logger.getLogger(SauceConnectTwoManager.class.getName());
+    private static final String SAUCE_CONNECT_CLASS = "com.saucelabs.sauceconnect.SauceConnect";
+    private final boolean quietMode;
     private Map<String, Process> tunnelMap = new HashMap<String, Process>();
 
     /**
@@ -41,11 +38,15 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
     private Map<String, Integer> processMap = new HashMap<String, Integer>();
 
     public SauceConnectTwoManager() {
+        this(false);
+    }
+
+    public SauceConnectTwoManager(boolean quietMode) {
+        this.quietMode = quietMode;
     }
 
     public void closeTunnelsForPlan(String userName, PrintStream printStream) {
         try {
-            logMessage(printStream, "Inside closeTunnelsForPlan");
             accessLock.lock();
             if (tunnelMap.containsKey(userName)) {
                 Integer count = decrementProcessCountForUser(userName, printStream);
@@ -78,8 +79,6 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
                 } else {
                     logMessage(printStream, "Jobs still running, not closing Sauce Connect");
                 }
-            } else {
-                logMessage(printStream, "Tunnel map does not contain " + userName);
             }
         } finally {
             accessLock.unlock();
@@ -97,7 +96,6 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
         if (printStream != null) {
             printStream.println(message);
         }
-        logger.info(message);
         julLogger.log(Level.INFO, message);
     }
 
@@ -105,7 +103,6 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
         try {
             outputStream.close();
         } catch (IOException e) {
-            logger.error("Error closing stream", e);
             julLogger.log(Level.WARNING, "Error closing stream", e);
         }
     }
@@ -114,7 +111,6 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
         try {
             inputStream.close();
         } catch (IOException e) {
-            logger.error("Error closing stream", e);
             julLogger.log(Level.WARNING, "Error closing stream", e);
         }
     }
@@ -137,7 +133,7 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
      * @throws IOException
      */
     //@Override
-    public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, PrintStream printStream) throws IOException {
+    public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options, String httpsProtocol, PrintStream printStream) throws IOException {
 
         //ensure that only a single thread attempts to open a connection
         try {
@@ -170,21 +166,37 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
             String fileSeparator = File.separator;
             String path = System.getProperty("java.home")
                     + fileSeparator + "bin" + fileSeparator + "java";
-            String[] args = new String[]{path, "-cp",
-                    builder.toString(),
-                    SauceConnect.class.getName(),
-                    username,
-                    apiKey,
-                    "-P",
-                    String.valueOf(port)
-            };
+            String[] args;
+            if (StringUtils.isBlank(httpsProtocol)) {
+                args = new String[]{path, "-cp",
+                        builder.toString(),
+                        SAUCE_CONNECT_CLASS,
+                        username,
+                        apiKey,
+                        "-P",
+                        String.valueOf(port),
+                };
+            } else {
+                args = new String[]{path, "-Dhttps.protocols=" + httpsProtocol, "-cp",
+                        builder.toString(),
+                        SAUCE_CONNECT_CLASS,
+                        username,
+                        apiKey,
+                        "-P",
+                        String.valueOf(port)
+                };
+            }
+
+            if (StringUtils.isNotBlank(options)) {
+                args = addElement(args, options);
+            }
 
             ProcessBuilder processBuilder = new ProcessBuilder(args);
             if (workingDirectory == null) {
                 workingDirectory = new File(getSauceConnectWorkingDirectory());
             }
             processBuilder.directory(workingDirectory);
-            logMessage(printStream, "Launching Sauce Connect " + Arrays.toString(args));
+            julLogger.log(Level.INFO, "Launching Sauce Connect " + Arrays.toString(args));
 
             final Process process = processBuilder.start();
             try {
@@ -211,7 +223,6 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
 
         } catch (URISyntaxException e) {
             //shouldn't happen
-            logger.error("Exception occured during retrieval of sauce connect jar URL", e);
             julLogger.log(Level.WARNING, "Exception occured during retrieval of sauce connect jar URL", e);
         } finally {
             //release the access lock
@@ -219,6 +230,18 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
         }
 
         return null;
+    }
+
+    private String[] addElement(String[] original, String added) {
+        //split added on space
+        String[] split = added.split(" ");
+        String[] result = original;
+        for (String arg : split) {
+            String[] newResult = Arrays.copyOf(result, result.length + 1);
+            newResult[result.length] = arg;
+            result = newResult;
+        }
+        return result;
     }
 
     public String getSauceConnectWorkingDirectory() {
@@ -270,8 +293,10 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
         }
 
         protected void processLine(String line) {
-            getPrintStream().println(line);
-            logger.info(line);
+            if (!quietMode) {
+                getPrintStream().println(line);
+                julLogger.info(line);
+            }
         }
 
         public abstract PrintStream getPrintStream();

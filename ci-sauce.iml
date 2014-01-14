@@ -16,7 +16,7 @@
     <orderEntry type="library" name="Maven: com.saucelabs:saucerest:1.0.4" level="project" />
     <orderEntry type="library" name="Maven: com.googlecode.json-simple:json-simple:1.1" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: log4j:log4j:1.2.16" level="project" />
-    <orderEntry type="library" name="Maven: com.saucelabs:sauce-connect:3.0.24" level="project" />
+    <orderEntry type="library" name="Maven: com.saucelabs:sauce-connect:3.0.29" level="project" />
     <orderEntry type="library" name="Maven: org.seleniumhq.selenium:selenium-api:2.26.0" level="project" />
     <orderEntry type="library" name="Maven: com.google.guava:guava:13.0.1" level="project" />
     <orderEntry type="library" name="Maven: org.json:json:20080701" level="project" />
